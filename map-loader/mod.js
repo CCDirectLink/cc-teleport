@@ -31,7 +31,7 @@ document.body.addEventListener('modsLoaded', function () {
 		}
 		console.log('map:', mapInput.value);
 		console.log('marker:', markerInput.value);
-		cc.ig.gameMain.teleport(mapInput.value, markerInput.value);
+		cc.ig.gameMain.teleport(mapInput.value.trim(), markerInput.value.trim());
 	}
 
 	div.appendChild(document.createTextNode('Map'));
