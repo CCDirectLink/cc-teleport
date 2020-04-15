@@ -1,4 +1,4 @@
 {
 	"name": "Map loader",
-	"main": "mod.js"
+	"prestart": "mod.js"
 }
