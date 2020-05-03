@@ -22,8 +22,25 @@ function teleportIfExists(map,marker){
 }
 
 ig.module('game.feature.gui.teleport')
-	.requires('dom.ready', 'impact.feature.gui.gui')
+	.requires('dom.ready', 'impact.feature.gui.gui','game.feature.model.game-model','game.feature.combat.combat')
 	.defines(() => {
+
+		sc.Combat.inject({
+			init(...args) {
+				this.parent(...args);
+				sc.Model.addObserver(sc.model, this);
+			},
+			modelChanged(model, event) {
+				if( model instanceof sc.GameModel ){
+					let div = document.querySelector('.cc-teleporter');
+					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED && div != null && typeof div !== undefined ){
+						if( sc.model.isTitle() ) div.style.display = 'none';
+						if( sc.model.isGame()  ) div.style.display = 'block';
+					}
+				}
+			}
+		});
+
 		ig.Gui.inject({
 			init(...args) {
 				this.parent(...args);
@@ -34,6 +51,7 @@ ig.module('game.feature.gui.teleport')
 				div.style.width = "100%";
 				div.style.background = "rgba(0,0,0,0.3)";
 				div.style.color = "white";
+				div.classList.add('cc-teleporter');
 
 				let mapInput = document.createElement('input');
 				mapInput.style.background = 'rgba(0,0,0,0.3)';
