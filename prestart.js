@@ -1,3 +1,26 @@
+/**
+ * @description - checks if is a valid map before teleporting
+ * @param {string} map - Input string from textbox 
+ */
+function teleportIfExists(map,marker){
+	// took from ig.Game.teleport -> ig.Game.preloadLevel 
+	mapPath = map.toPath(ig.root + 'data/maps/', '.json');	//From 
+	
+	jQuery.ajax({
+		dataType: 'json',
+		url: mapPath,
+		success: (a) => {
+			console.log(`Teleported to ${map}`)
+			cc.ig.gameMain.teleport(map,marker);
+		},
+		error: (b, c, e) => {
+			console.warn(`Map ${map} does not exists`);
+		}
+	});
+
+	return;
+}
+
 ig.module('game.feature.gui.teleport')
 	.requires('dom.ready', 'impact.feature.gui.gui')
 	.defines(() => {
@@ -30,9 +53,7 @@ ig.module('game.feature.gui.teleport')
 				btn.style.outline = 'none';
 
 				btn.onclick = () => {
-					console.log('map:', mapInput.value);
-					console.log('marker:', markerInput.value);
-					ig.gameMain.teleport(mapInput.value.trim(), markerInput.value.trim());
+					teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
 				}
 
 				div.append('Map', mapInput, ' Marker', markerInput, btn);
