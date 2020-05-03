@@ -1,6 +1,6 @@
 {
 	"name": "teleport",
 	"description": "Menu for quick teleportation",
-	"main": "mod.js"
+	"prestart": "prestart.js"
 }
 
