@@ -1,4 +1,6 @@
 {
-	"name": "Map loader",
+	"name": "teleport",
+	"description": "Menu for quick teleportation",
 	"main": "mod.js"
 }
+
