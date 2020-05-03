@@ -56,6 +56,20 @@ ig.module('game.feature.gui.teleport')
 					teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
 				}
 
+
+				mapInput.onkeypress = (event) => {
+					// Teleport when press enter
+					if(event.key == "Enter") {
+						teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
+						// Remove focus after submit
+						document.activeElement.blur();
+					}
+					// Autocomplete
+					if(event.key == "Tab") {
+
+					}
+				}
+
 				div.append('Map', mapInput, ' Marker', markerInput, btn);
 
 				document.body.appendChild(div);
