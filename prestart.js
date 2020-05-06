@@ -7,6 +7,7 @@ ig.module('game.feature.gui.teleport')
 		// ----------------- Local Variables --------------------------------------------------------------------
 
 		let modInterface;
+		let interfaceToggle;
 
 
 		// ---------------- Local Functions --------------------------------------------------------------------
@@ -76,9 +77,9 @@ ig.module('game.feature.gui.teleport')
 			},
 			modelChanged(model, event) {
 				if( model instanceof sc.GameModel ){
-					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED && modInterface != null && typeof div !== undefined ){
-						if( sc.model.isTitle() ) modInterface.style.display = 'none';
-						if( sc.model.isGame()  ) modInterface.style.display = 'block';
+					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED && interfaceToggle != null && typeof div !== undefined ){
+						if( sc.model.isTitle() ) interfaceToggle.style.display = 'none';
+						if( sc.model.isGame()  ) interfaceToggle.style.display = 'block';
 					}
 				}
 			}
@@ -92,6 +93,24 @@ ig.module('game.feature.gui.teleport')
 			init(...args) {
 				this.parent(...args);
 
+				document.body.insertAdjacentHTML('beforeend',`
+					<img
+						id="interfaceToggle"
+						src="${'teleportIcon'.toPath(ig.root + 'mods/cc-teleport/', '.png')}" 
+						height="38"
+						width="38"
+						style="
+							position: absolute;
+							right: 10px;
+							top: 10px;
+							background-color: white;
+							opacity: 0.4;
+							padding: 5px;
+							border-radius: 10px;
+						"
+					> 
+				`);
+				interfaceToggle = document.getElementById('interfaceToggle');
 
 				/* ------- Init teleporter interface ------- */
 
@@ -106,7 +125,7 @@ ig.module('game.feature.gui.teleport')
 							color: white;
 							display: block;">
 						Map <input id="mapInput" style="background: rgba(0, 0, 0, 0.3);">
-						Marker <input id="markerInput" style="background: rgba(0, 0, 0, 0.3);">
+						Position <input id="markerInput" style="background: rgba(0, 0, 0, 0.3);">
 						<button
 							id="btnTeleport"
 							style="color: white;
@@ -131,6 +150,16 @@ ig.module('game.feature.gui.teleport')
 					teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
 				}
 
+				interfaceToggle.onclick = () => {
+					if(modInterface.style.display == 'none'){
+						interfaceToggle.style.opacity = '1';
+						modInterface.style.display = 'block';
+					} else {
+						modInterface.style.display = 'none';
+						interfaceToggle.style.opacity = '0.4';
+					}
+				};
+
 				mapInput.onkeypress = (e) => {
 					handleEnterKey(e);
 				}
@@ -140,6 +169,10 @@ ig.module('game.feature.gui.teleport')
 				}
 
 
+
+				// Initial state of the interface
+				modInterface.style.display = 'none';
+				interfaceToggle.style.display = 'none'; 
 			}
 		});
 	});
