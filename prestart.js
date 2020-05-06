@@ -1,24 +1,40 @@
 /**
- * @description - checks if is a valid map before teleporting
- * @param {string} map - Input string from textbox 
+ * @description checks if is a valid map before teleporting
+ * @param {string} map Input string from textbox 
+ * @param {string} marker Map position to start 
  */
 function teleportIfExists(map,marker){
-	// took from ig.Game.teleport -> ig.Game.preloadLevel 
 	mapPath = map.toPath(ig.root + 'data/maps/', '.json');	//From 
-	
 	jQuery.ajax({
 		dataType: 'json',
 		url: mapPath,
 		success: (a) => {
 			console.log(`Teleported to ${map}`)
-			cc.ig.gameMain.teleport(map,marker);
+			cc.ig.gameMain.teleport(map,setTeleportPosition(marker));
 		},
 		error: (b, c, e) => {
 			console.warn(`Map ${map} does not exists`);
 		}
 	});
-
 	return;
+}
+
+/**
+ * @description create TeleportPosition instante based only on marker value
+ * @param {string} marker value of the marker
+ * 		Possible values:
+ * 			- 'up', 'down', 'left', 'right', 'landmark'
+ */
+function setTeleportPosition(marker){
+	markerValues = ['up', 'down', 'left', 'right', 'landmark'];
+	return ig.TeleportPosition.createFromJson({
+		marker: markerValues.find( m => m == marker),
+		pos: 0,
+		face: null,
+		level: 0,
+		baseZPos: 0,
+		size: {x:0, y:0}
+	});
 }
 
 ig.module('game.feature.gui.teleport')
@@ -45,6 +61,7 @@ ig.module('game.feature.gui.teleport')
 			init(...args) {
 				this.parent(...args);
 
+				
 				let div = document.createElement("div");
 				div.style.position = 'absolute';
 				div.style.bottom = '0';
@@ -82,11 +99,17 @@ ig.module('game.feature.gui.teleport')
 						// Remove focus after submit
 						document.activeElement.blur();
 					}
-					// Autocomplete
-					if(event.key == "Tab") {
+				}
 
+				markerInput.onkeypress = (event) => {
+					// Teleport when press enter
+					if(event.key == "Enter") {
+						teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
+						// Remove focus after submit
+						document.activeElement.blur();
 					}
 				}
+
 
 				div.append('Map', mapInput, ' Marker', markerInput, btn);
 
