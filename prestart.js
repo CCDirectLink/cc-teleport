@@ -1,46 +1,74 @@
-/**
- * @description checks if is a valid map before teleporting
- * @param {string} map Input string from textbox 
- * @param {string} marker Map position to start 
- */
-function teleportIfExists(map,marker){
-	mapPath = map.toPath(ig.root + 'data/maps/', '.json');	//From 
-	jQuery.ajax({
-		dataType: 'json',
-		url: mapPath,
-		success: (a) => {
-			console.log(`Teleported to ${map}`)
-			cc.ig.gameMain.teleport(map,setTeleportPosition(marker));
-		},
-		error: (b, c, e) => {
-			console.warn(`Map ${map} does not exists`);
-		}
-	});
-	return;
-}
 
-/**
- * @description create TeleportPosition instante based only on marker value
- * @param {string} marker value of the marker
- * 		Possible values:
- * 			- 'up', 'down', 'left', 'right', 'landmark'
- */
-function setTeleportPosition(marker){
-	markerValues = ['up', 'down', 'left', 'right', 'landmark'];
-	return ig.TeleportPosition.createFromJson({
-		marker: markerValues.find( m => m == marker),
-		pos: 0,
-		face: null,
-		level: 0,
-		baseZPos: 0,
-		size: {x:0, y:0}
-	});
-}
 
 ig.module('game.feature.gui.teleport')
 	.requires('dom.ready', 'impact.feature.gui.gui','game.feature.model.game-model','game.feature.combat.combat')
 	.defines(() => {
+		
+		// ----------------- Local Variables --------------------------------------------------------------------
 
+		let modInterface;
+
+
+		// ---------------- Local Functions --------------------------------------------------------------------
+
+		/**
+		 * @description checks if is a valid map before teleporting
+		 * @param {string} map Input string from textbox 
+		 * @param {string} marker Map position to start 
+		 */
+		function teleportIfExists(map,marker){
+			mapPath = map.toPath(ig.root + 'data/maps/', '.json');	//From 
+			jQuery.ajax({
+				dataType: 'json',
+				url: mapPath,
+				success: (a) => {
+					console.log(`Teleported to ${map}`)
+					cc.ig.gameMain.teleport(map,setTeleportPosition(marker));
+				},
+				error: (b, c, e) => {
+					console.warn(`Map ${map} does not exists`);
+				}
+			});
+			return;
+		}
+
+		/**
+		 * @description create TeleportPosition instante based only on marker value
+		 * @param {string} marker value of the marker
+		 * 		Possible values:
+		 * 			- 'up', 'down', 'left', 'right', 'landmark'
+		 */
+		function setTeleportPosition(marker){
+			markerValues = ['up', 'down', 'left', 'right', 'landmark'];
+			return ig.TeleportPosition.createFromJson({
+				marker: markerValues.find( m => m == marker),
+				pos: 0,
+				face: null,
+				level: 0,
+				baseZPos: 0,
+				size: {x:0, y:0}
+			});
+		}
+
+		/**
+		 * @description Handle press enter key event
+		 * @param {event} event trigger event
+		 */
+		function handleEnterKey(event){
+			if(event.key == "Enter") {
+				teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
+				document.activeElement.blur();	// Remove focus after submit
+			}
+		}
+
+
+
+		// ----------------- Mod Injections --------------------------------------------------------------------
+
+		/**
+		 * @inject
+		 * Handle game state transitions from main menu to the game 
+		 */
 		sc.Combat.inject({
 			init(...args) {
 				this.parent(...args);
@@ -48,72 +76,70 @@ ig.module('game.feature.gui.teleport')
 			},
 			modelChanged(model, event) {
 				if( model instanceof sc.GameModel ){
-					let div = document.querySelector('.cc-teleporter');
-					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED && div != null && typeof div !== undefined ){
-						if( sc.model.isTitle() ) div.style.display = 'none';
-						if( sc.model.isGame()  ) div.style.display = 'block';
+					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED && modInterface != null && typeof div !== undefined ){
+						if( sc.model.isTitle() ) modInterface.style.display = 'none';
+						if( sc.model.isGame()  ) modInterface.style.display = 'block';
 					}
 				}
 			}
 		});
 
+		/**
+		 * @inject
+		 * Add the interface to the mod 
+		 */
 		ig.Gui.inject({
 			init(...args) {
 				this.parent(...args);
 
-				
-				let div = document.createElement("div");
-				div.style.position = 'absolute';
-				div.style.bottom = '0';
-				div.style.width = "100%";
-				div.style.background = "rgba(0,0,0,0.3)";
-				div.style.color = "white";
-				div.classList.add('cc-teleporter');
 
-				let mapInput = document.createElement('input');
-				mapInput.style.background = 'rgba(0,0,0,0.3)';
+				/* ------- Init teleporter interface ------- */
 
-				let markerInput = document.createElement('input');
-				markerInput.style.background = 'rgba(0,0,0,0.3)';
+				document.body.insertAdjacentHTML('beforeend',`
+					<div id="ccTeleporter"
+						style="
+							display: none;
+							position: absolute;
+							bottom: 0px;
+							width: 100%;
+							background: rgba(0, 0, 0, 0.3);
+							color: white;
+							display: block;">
+						Map <input id="mapInput" style="background: rgba(0, 0, 0, 0.3);">
+						Marker <input id="markerInput" style="background: rgba(0, 0, 0, 0.3);">
+						<button
+							id="btnTeleport"
+							style="color: white;
+							padding: 4px;
+							background-color: rgba(0, 0, 0, 0);
+							background-repeat: no-repeat;
+							border: 1px solid rgba(1, 1, 1, 0.5);
+							cursor: pointer;
+							overflow: hidden;
+							outline: none;"
+						> Teleport </button>
+					</div>
+				`);
 
-				let btn = document.createElement('button');
-				btn.innerText = 'Teleport';
-				btn.style.color = 'white';
-				btn.style.padding = '4px';
-				btn.style.backgroundColor = 'rgba(0,0,0,0)';
-				btn.style.backgroundRepeat = 'no-repeat';
-				btn.style.border = '1px solid rgba(1,1,1,0.5)';
-				btn.style.cursor = 'pointer';
-				btn.style.overflow = 'hidden';
-				btn.style.outline = 'none';
+				/* ------ Init Event Handlers ------ */
+				modInterface = document.getElementById('ccTeleporter');
+				let mapInput = document.getElementById('mapInput');
+				let markerInput = document.getElementById('markerInput');
+				let btn = document.getElementById('btnTeleport');
 
 				btn.onclick = () => {
 					teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
 				}
 
-
-				mapInput.onkeypress = (event) => {
-					// Teleport when press enter
-					if(event.key == "Enter") {
-						teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
-						// Remove focus after submit
-						document.activeElement.blur();
-					}
+				mapInput.onkeypress = (e) => {
+					handleEnterKey(e);
 				}
 
-				markerInput.onkeypress = (event) => {
-					// Teleport when press enter
-					if(event.key == "Enter") {
-						teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
-						// Remove focus after submit
-						document.activeElement.blur();
-					}
+				markerInput.onkeypress = (e) => {
+					handleEnterKey(e);
 				}
 
 
-				div.append('Map', mapInput, ' Marker', markerInput, btn);
-
-				document.body.appendChild(div);
 			}
 		});
 	});
