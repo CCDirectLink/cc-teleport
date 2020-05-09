@@ -10,6 +10,14 @@ ig.module('game.feature.gui.teleport')
 
 		let modInterface;
 		let interfaceToggle;
+		
+		let modState = 0;
+		const MOD_STATE = {
+			ALL_HIDDEN: 0, 
+			TOGGLER_SHOWN: 1,
+			MOD_SHOWN: 2
+		}
+
 		const markerValues = ['up', 'down', 'left', 'right', 'landmark'];
 		let mapValues = [];
 
@@ -52,6 +60,7 @@ ig.module('game.feature.gui.teleport')
 					console.log(`Teleported to ${map}`)
 					cc.ig.gameMain.teleport(map,setTeleportPosition(marker));
 					document.activeElement.blur();	// Remove focus after submit
+					setModState(MOD_STATE.MOD_SHOWN); // CLose the autocomplete
 				},
 				error: (b, c, e) => {
 					console.warn(`Map ${map} does not exists`);
@@ -84,11 +93,6 @@ ig.module('game.feature.gui.teleport')
 		function handleEnterKey(event){
 			if(event.key == "Enter") {
 				teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
-				// CLose the autocomplete
-				let x = document.getElementsByClassName("autocomplete-items");		
-				for (let i = 0; i < x.length; i++) {
-					x[i].parentNode.removeChild(x[i]);
-				}
 			}
 		}
 
@@ -192,6 +196,37 @@ ig.module('game.feature.gui.teleport')
 		}
 
 
+		/**
+		 * @description State state of the mod interface
+		 * @param {Modstate Constant} state 
+		 */
+		function setModState(state){
+
+			modState = state;
+
+			switch (state) {
+				case MOD_STATE.ALL_HIDDEN:
+					interfaceToggle.style.display = 'none';
+					modInterface.style.display = 'none';
+					break;
+				case MOD_STATE.TOGGLER_SHOWN:
+					interfaceToggle.style.display = 'block';
+					modInterface.style.display = 'none';
+					break;
+				case MOD_STATE.MOD_SHOWN:
+					interfaceToggle.style.display = 'none';
+					modInterface.style.display = 'block';
+					break;
+				default:
+					console.error('cc-teleport: Wrong mod state set');
+					break;
+			}
+
+			let x = document.getElementsByClassName("autocomplete-items");		
+			for (let i = 0; i < x.length; i++) {
+				x[i].parentNode.removeChild(x[i]);
+			}
+		}
 
 		// ----------------- Mod Injections --------------------------------------------------------------------
 
@@ -207,8 +242,10 @@ ig.module('game.feature.gui.teleport')
 			modelChanged(model, event) {
 				if( model instanceof sc.GameModel ){
 					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED && interfaceToggle != null && typeof div !== undefined ){
-						if( sc.model.isTitle() ) interfaceToggle.style.display = 'none';
-						if( sc.model.isGame()  ) interfaceToggle.style.display = 'block';
+						if( sc.model.isTitle() )
+							setModState(MOD_STATE.ALL_HIDDEN);
+						if( sc.model.isGame() )
+							setModState(MOD_STATE.TOGGLER_SHOWN);
 					}
 				}
 			}
@@ -230,8 +267,8 @@ ig.module('game.feature.gui.teleport')
 						width="38"
 						style="
 							position: absolute;
-							right: 10px;
-							top: 10px;
+							left: 10px;
+							bottom: 10px;
 							background-color: white;
 							opacity: 0.4;
 							padding: 5px;
@@ -265,11 +302,23 @@ ig.module('game.feature.gui.teleport')
 							overflow: hidden;
 							outline: none;"
 						> Teleport </button>
+						<button
+							id="hideTeleportMod"
+							style="color: white;
+							padding: 4px;
+							background-color: rgba(0, 0, 0, 0);
+							background-repeat: no-repeat;
+							border: 1px solid rgba(1, 1, 1, 0.5);
+							cursor: pointer;
+							overflow: hidden;
+							outline: none;"
+						> Hide </button>
 					</div>
 				`);
 
 				/* ------ Init Event Handlers ------ */
 				modInterface = document.getElementById('ccTeleporter');
+				let hideTeleportBtn = document.getElementById('hideTeleportMod');
 				let mapInput = document.getElementById('mapInput');
 				let markerInput = document.getElementById('markerInput');
 				let btn = document.getElementById('btnTeleport');
@@ -279,14 +328,16 @@ ig.module('game.feature.gui.teleport')
 				}
 
 				interfaceToggle.onclick = () => {
-					if(modInterface.style.display == 'none'){
-						interfaceToggle.style.opacity = '1';
-						modInterface.style.display = 'block';
+					if(modState = MOD_STATE.TOGGLER_SHOWN){
+						setModState(MOD_STATE.MOD_SHOWN);
 					} else {
-						modInterface.style.display = 'none';
-						interfaceToggle.style.opacity = '0.4';
+						setModState(MOD_STATE.TOGGLER_SHOWN);
 					}
 				};
+
+				hideTeleportBtn.onclick = () => {
+					setModState(MOD_STATE.TOGGLER_SHOWN);
+				}
 
 				mapInput.onkeypress = (e) => {
 					handleEnterKey(e);
@@ -302,8 +353,7 @@ ig.module('game.feature.gui.teleport')
 				
 
 				// Initial state of the interface
-				modInterface.style.display = 'none';
-				interfaceToggle.style.display = 'none'; 
+				setModState(MOD_STATE.ALL_HIDDEN);
 			}
 		});
 	});
