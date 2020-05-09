@@ -1,15 +1,41 @@
 
+const fs = require('fs');
 
 ig.module('game.feature.gui.teleport')
 	.requires('dom.ready', 'impact.feature.gui.gui','game.feature.model.game-model','game.feature.combat.combat')
 	.defines(() => {
 		
+		
 		// ----------------- Local Variables --------------------------------------------------------------------
 
 		let modInterface;
 		let interfaceToggle;
+		const markerValues = ['up', 'down', 'left', 'right', 'landmark'];
+		let mapValues = [];
 
 
+		// ---------------------- init map list Variable
+		dir = './assets/data/maps/';
+
+		/**
+		 * @description get all teleportable maps recursively
+		 * @param {string} d start directory
+		 */
+		function getJsonFileNamesRecursive(d){
+			fs.readdir(d, (err, files) => {
+				files.forEach(file => {
+					if( file.search('.json') > 0 ){
+						map = d + '/' + file.replace('.json','');
+						mapValues.push( map.replace(dir,'').substr(1) );
+					}
+					else{
+						getJsonFileNamesRecursive(d+'/'+file);
+					}
+				});
+			});
+		}
+
+		getJsonFileNamesRecursive(dir);
 		// ---------------- Local Functions --------------------------------------------------------------------
 
 		/**
@@ -25,6 +51,7 @@ ig.module('game.feature.gui.teleport')
 				success: (a) => {
 					console.log(`Teleported to ${map}`)
 					cc.ig.gameMain.teleport(map,setTeleportPosition(marker));
+					document.activeElement.blur();	// Remove focus after submit
 				},
 				error: (b, c, e) => {
 					console.warn(`Map ${map} does not exists`);
@@ -40,7 +67,6 @@ ig.module('game.feature.gui.teleport')
 		 * 			- 'up', 'down', 'left', 'right', 'landmark'
 		 */
 		function setTeleportPosition(marker){
-			markerValues = ['up', 'down', 'left', 'right', 'landmark'];
 			return ig.TeleportPosition.createFromJson({
 				marker: markerValues.find( m => m == marker),
 				pos: 0,
@@ -58,8 +84,111 @@ ig.module('game.feature.gui.teleport')
 		function handleEnterKey(event){
 			if(event.key == "Enter") {
 				teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
-				document.activeElement.blur();	// Remove focus after submit
+				// CLose the autocomplete
+				let x = document.getElementsByClassName("autocomplete-items");		
+				for (let i = 0; i < x.length; i++) {
+					x[i].parentNode.removeChild(x[i]);
+				}
 			}
+		}
+
+
+		/**
+		 * @description Creates autocomplete functionality into element
+		 * @param {HTML Element} inp element to append the autocomplete
+		 * @param {Array} arr string options for the autocomplete
+		 * Reference: https://codepen.io/urbanyoda/pen/zXpxJQ
+		 */
+		function autocomplete(inp, arr) {
+			let currentFocus;
+		
+			/*execute a function when someone writes in the text field:*/
+			inp.addEventListener("input", function (e) {
+				let a, b, i, showCount = 6,
+					val = this.value;
+		
+				closeAllLists();
+				if (!val) {
+					return false;
+				}
+				currentFocus = -1;
+				a = document.createElement("DIV");
+				a.setAttribute("id", this.id + "autocomplete-list");
+				a.setAttribute("class", "autocomplete-items");
+				a.style.position = 'fixed'
+				a.style.bottom = '30px';
+				a.style.left = '20px';
+				this.parentNode.appendChild(a);
+				for (i = 0; i < arr.length; i++) {		
+					//Creating the matching elementes
+					if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase() && showCount > 0) {		
+
+						b = document.createElement("DIV");
+						b.innerHTML = `
+						<strong>${arr[i].substr(0, val.length)}</strong>${arr[i].substr(val.length)}\
+						<input type='hidden' value="${arr[i]}">`;
+						b.addEventListener("click", function (e) {
+							inp.value = this.getElementsByTagName("input")[0].value;
+							closeAllLists();
+						});
+						a.appendChild(b);
+						showCount--;
+					}
+				}
+			});
+			// Keyboard functions
+			inp.addEventListener("keydown", function (e) {
+				let x = document.getElementById(this.id + "autocomplete-list");
+				if (x) x = x.getElementsByTagName("div");
+				if (e.keyCode == 40) { // DOWN
+					currentFocus++;
+					addActive(x);
+				} else if (e.keyCode == 38) { //UP
+					currentFocus--;
+					addActive(x);
+				} else if (e.keyCode == 13) { // ENTER
+					if (currentFocus > -1) {
+						if (x) x[currentFocus].click();
+						teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
+					}
+				}
+			});
+		
+			function addActive(x) {
+				/*a function to classify an item as "active":*/
+				if (!x) return false;
+				removeActive(x);
+				if (currentFocus >= x.length) currentFocus = 0;
+				if (currentFocus < 0) currentFocus = (x.length - 1);
+				x[currentFocus].classList.add("autocomplete-active");
+				x[currentFocus].style['color'] = '#000000';
+				x[currentFocus].style['background-color'] = '#ffffff';
+			}
+		
+			function removeActive(x) {
+				/*a function to remove the "active" class from all autocomplete items:*/
+				for (let i = 0; i < x.length; i++) {
+					x[i].classList.remove("autocomplete-active");
+					x[i].style['color'] = '#ffffff';
+					x[i].style['background-color'] = '#00000000';
+				}
+			}
+		
+			function closeAllLists(elmnt) {
+				/*close all autocomplete lists in the document,
+				except the one passed as an argument:*/
+				let x = document.getElementsByClassName("autocomplete-items");
+						
+				for (let i = 0; i < x.length; i++) {
+					if (elmnt != x[i] && elmnt != inp) {
+						x[i].parentNode.removeChild(x[i]);
+					}
+				}
+			}
+			// Close list by clicking outside
+			document.addEventListener("click", function (e) {
+				closeAllLists(e.target);
+			});
 		}
 
 
@@ -92,7 +221,7 @@ ig.module('game.feature.gui.teleport')
 		ig.Gui.inject({
 			init(...args) {
 				this.parent(...args);
-
+				
 				document.body.insertAdjacentHTML('beforeend',`
 					<img
 						id="interfaceToggle"
@@ -111,9 +240,8 @@ ig.module('game.feature.gui.teleport')
 					> 
 				`);
 				interfaceToggle = document.getElementById('interfaceToggle');
-
+				
 				/* ------- Init teleporter interface ------- */
-
 				document.body.insertAdjacentHTML('beforeend',`
 					<div id="ccTeleporter"
 						style="
@@ -169,6 +297,9 @@ ig.module('game.feature.gui.teleport')
 				}
 
 
+				autocomplete(mapInput,mapValues);
+				autocomplete(markerInput,markerValues);
+				
 
 				// Initial state of the interface
 				modInterface.style.display = 'none';
