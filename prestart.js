@@ -241,10 +241,10 @@ ig.module('game.feature.gui.teleport')
 			},
 			modelChanged(model, event) {
 				if( model instanceof sc.GameModel ){
-					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED && interfaceToggle != null && typeof div !== undefined ){
-						if( sc.model.isTitle() )
+					if(event == sc.GAME_MODEL_MSG.STATE_CHANGED || sc.GAME_MODEL_MSG.SUB_STATE_CHANGED ){
+						if( sc.model.isTitle() || !sc.model.isRunning())
 							setModState(MOD_STATE.ALL_HIDDEN);
-						if( sc.model.isGame() )
+						if( sc.model.isGame() && sc.model.isRunning() )
 							setModState(MOD_STATE.TOGGLER_SHOWN);
 					}
 				}
