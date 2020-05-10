@@ -1,5 +1,6 @@
 
 const fs = require('fs');
+const path = require('path');	
 
 ig.module('game.feature.gui.teleport')
 	.requires('dom.ready', 'impact.feature.gui.gui','game.feature.model.game-model','game.feature.combat.combat')
@@ -23,7 +24,7 @@ ig.module('game.feature.gui.teleport')
 
 
 		// ---------------------- init map list Variable
-		dir = './assets/data/maps/';
+		dir = './assets/data/maps';
 
 		/**
 		 * @description get all teleportable maps recursively
@@ -33,12 +34,12 @@ ig.module('game.feature.gui.teleport')
 			fs.readdir(d, (err, files) => {
 				if( err == null ) {
 					for (const file of files) {
-						if( file.search('.json') > 0 ){
-							map = d + '/' + file.replace('.json','');
-							mapValues.push( map.replace(dir,'').substr(1) );
+						if( file.endsWith('.json') ){
+							map = path.join( d, file.replace('.json','') );
+							mapValues.push(  map.replace(/\\/g,'/').replace(/^.*maps(\/|\\)/,'') );
 						}
 						else{
-							getJsonFileNamesRecursive(d+'/'+file);
+							getJsonFileNamesRecursive( path.join(d,file) );
 						}	
 					}
 				} else {
@@ -47,8 +48,7 @@ ig.module('game.feature.gui.teleport')
 				}
 			});
 		}
-
-		getJsonFileNamesRecursive(dir);
+		getJsonFileNamesRecursive( dir );
 		// ---------------- Local Functions --------------------------------------------------------------------
 
 		/**
