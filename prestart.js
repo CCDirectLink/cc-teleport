@@ -31,15 +31,20 @@ ig.module('game.feature.gui.teleport')
 		 */
 		function getJsonFileNamesRecursive(d){
 			fs.readdir(d, (err, files) => {
-				files.forEach(file => {
-					if( file.search('.json') > 0 ){
-						map = d + '/' + file.replace('.json','');
-						mapValues.push( map.replace(dir,'').substr(1) );
+				if( err == null ) {
+					for (const file of files) {
+						if( file.search('.json') > 0 ){
+							map = d + '/' + file.replace('.json','');
+							mapValues.push( map.replace(dir,'').substr(1) );
+						}
+						else{
+							getJsonFileNamesRecursive(d+'/'+file);
+						}	
 					}
-					else{
-						getJsonFileNamesRecursive(d+'/'+file);
-					}
-				});
+				} else {
+					console.warn('autocomplete for maps unavailable');
+					console.error(err.message);
+				}
 			});
 		}
 
