@@ -63,7 +63,7 @@ ig.module('game.feature.gui.teleport')
 				url: mapPath,
 				success: (a) => {
 					console.log(`Teleported to ${map}`)
-					cc.ig.gameMain.teleport(map,setTeleportPosition(marker));
+					ig.game.teleport(map,setTeleportPosition(marker));
 					document.activeElement.blur();	// Remove focus after submit
 					setModState(MOD_STATE.MOD_SHOWN); // CLose the autocomplete
 				},
