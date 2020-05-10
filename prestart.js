@@ -149,13 +149,13 @@ ig.module('game.feature.gui.teleport')
 			inp.addEventListener("keydown", function (e) {
 				let x = document.getElementById(this.id + "autocomplete-list");
 				if (x) x = x.getElementsByTagName("div");
-				if (e.keyCode == 40) { // DOWN
+				if (e.keyCode == ig.KEY.DOWN_ARROW) {
 					currentFocus++;
 					addActive(x);
-				} else if (e.keyCode == 38) { //UP
+				} else if (e.keyCode == ig.KEY.UP_ARROW) {
 					currentFocus--;
 					addActive(x);
-				} else if (e.keyCode == 13) { // ENTER
+				} else if (e.keyCode == ig.KEY.ENTER) {
 					if (currentFocus > -1) {
 						if (x) x[currentFocus].click();
 						teleportIfExists(mapInput.value.trim(),markerInput.value.trim());
