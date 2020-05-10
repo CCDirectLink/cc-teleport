@@ -1,5 +1,4 @@
-
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');	
 
 ig.module('game.feature.gui.teleport')
@@ -31,8 +30,8 @@ ig.module('game.feature.gui.teleport')
 		 * @param {string} d start directory
 		 */
 		function getJsonFileNamesRecursive(d){
-			fs.readdir(d, (err, files) => {
-				if( err == null ) {
+			fs.readdir(d).then(
+				files => {
 					for (const file of files) {
 						if( file.endsWith('.json') ){
 							map = path.join( d, file.replace('.json','') );
@@ -42,11 +41,12 @@ ig.module('game.feature.gui.teleport')
 							getJsonFileNamesRecursive( path.join(d,file) );
 						}	
 					}
-				} else {
+				}, 
+				err => {
 					console.warn('autocomplete for maps unavailable');
 					console.error(err.message);
 				}
-			});
+			);
 		}
 		getJsonFileNamesRecursive( dir );
 		// ---------------- Local Functions --------------------------------------------------------------------
