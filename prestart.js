@@ -262,26 +262,19 @@ ig.module('game.feature.gui.teleport')
 			init(...args) {
 				this.parent(...args);
 				
-				document.body.insertAdjacentHTML('beforeend',`
-					<img
-						id="interfaceToggle"
-						src="${'teleportIcon'.toPath(ig.root + 'mods/cc-teleport/', '.png')}" 
-						height="38"
-						width="38"
-						style="
-							position: absolute;
-							left: 10px;
-							bottom: 10px;
-							background-color: white;
-							opacity: 0.4;
-							padding: 5px;
-							border-radius: 10px;
-						"
-					> 
-				`);
-				interfaceToggle = document.getElementById('interfaceToggle');
-				
 				/* ------- Init teleporter interface ------- */
+				interfaceToggle = new Image(35,35);
+				interfaceToggle.id = 'interfaceToggle'; 
+				interfaceToggle.src = 'teleportIcon'.toPath(ig.root + 'mods/cc-teleport/', '.png');
+				interfaceToggle.style.left = '10px';
+				interfaceToggle.style.bottom = '10px';
+				interfaceToggle.style.position = 'absolute';
+				interfaceToggle.style.opacity = '0.4';
+				interfaceToggle.style.padding = '10px';
+				interfaceToggle.style.borderRadius = '10px';
+				interfaceToggle.style.backgroundColor = 'white';
+				document.body.appendChild(interfaceToggle);
+				
 				document.body.insertAdjacentHTML('beforeend',`
 					<div id="ccTeleporter"
 						style="
