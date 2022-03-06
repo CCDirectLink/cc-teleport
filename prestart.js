@@ -244,13 +244,14 @@ ig.module('game.feature.gui.teleport')
 				this.parent(...args);
 				sc.Model.addObserver(sc.model, this);
 			},
-			modelChanged(model, event) {
+			modelChanged(model, event, data) {
 				if( (model instanceof sc.GameModel) && (event == sc.GAME_MODEL_MSG.STATE_CHANGED || sc.GAME_MODEL_MSG.SUB_STATE_CHANGED ) ){
 					if( sc.model.isTitle() || !sc.model.isRunning())
 						setModState(MOD_STATE.ALL_HIDDEN);
 					if( sc.model.isGame() && sc.model.isRunning() )
 						setModState(MOD_STATE.TOGGLER_SHOWN);
 				}
+				return this.parent(model, event, data);
 			}
 		});
 
